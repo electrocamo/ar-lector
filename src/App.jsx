@@ -15,7 +15,8 @@ export default function App() {
     const { renderer, scene, camera } = mindarThree;
     const anchor = mindarThree.addAnchor(0);
 
-    const model = await loadGLTF("/public/plato1.glb");
+    // ✅ Aquí se carga el modelo correctamente
+    const model = await loadGLTF("plato1.glb");
     model.scene.scale.set(0.4, 0.4, 0.4);
     model.scene.position.set(0, 0, 0);
     anchor.group.add(model.scene);
