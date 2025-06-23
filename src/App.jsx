@@ -9,16 +9,30 @@ export default function App() {
   const handleStart = async () => {
     const mindarThree = new window.MINDAR.IMAGE.MindARThree({
       container: containerRef.current,
-      imageTargetSrc: "/target.mind",
+      imageTargetSrc: `${import.meta.env.BASE_URL}target.mind`,
     });
 
     const { renderer, scene, camera } = mindarThree;
     const anchor = mindarThree.addAnchor(0);
 
-    // ✅ Aquí se carga el modelo correctamente
-    const model = await loadGLTF("plato1.glb");
-    model.scene.scale.set(0.4, 0.4, 0.4);
+    // ✅ Añadir luces aquí
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+
+    // ✅ Saber cuándo se reconoce el target
+    anchor.onTargetFound = () => {
+      console.log("🎯 Target reconocido");
+    };
+
+    // ✅ Cargar modelo
+    const model = await loadGLTF(`${import.meta.env.BASE_URL}bandeja_paisa.glb`);
+    model.scene.scale.set(0.2, 0.2, 0.2);
     model.scene.position.set(0, 0, 0);
+    model.scene.rotation.set(0, -Math.PI / 2, 0); // ejemplo: rotar 90° en X
     anchor.group.add(model.scene);
 
     await mindarThree.start();
@@ -47,7 +61,7 @@ export default function App() {
           Iniciar experiencia RA
         </button>
       )}
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      <div ref={containerRef} style={{ width: "100vw", height: "100vh" }} />
     </div>
   );
 }
