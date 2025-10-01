@@ -12,31 +12,34 @@ export default function App() {
       return;
     }
 
+    // Crear renderer con soporte XR
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.xr.enabled = true;
     renderer.setSize(window.innerWidth, window.innerHeight);
     containerRef.current.appendChild(renderer.domElement);
 
+    // Escena y cámara
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera();
 
-    // ✅ Luces
-    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-    scene.add(light);
+    // Luces
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(hemiLight);
 
-    // ✅ Modelo
-    const model = await loadGLTF(`${import.meta.env.BASE_URL}pieza.gltf`);
+    // Cargar modelo GLTF
+    const model = await loadGLTF(`${import.meta.env.BASE_URL}pieza.glb`);
     model.scene.scale.set(0.2, 0.2, 0.2);
-    model.scene.position.set(0, 0, -0.5); // medio metro al frente de la cámara
+    model.scene.position.set(0, 0, -0.5); // medio metro enfrente
     scene.add(model.scene);
 
-    // ✅ Sesión de AR
+    // Iniciar sesión AR (sin marcador)
     const session = await navigator.xr.requestSession("immersive-ar", {
-      requiredFeatures: ["hit-test", "local-floor"],
+      requiredFeatures: ["local-floor"], // “hit-test” si luego quieres colocarlo en el suelo
     });
 
     renderer.xr.setSession(session);
 
+    // Animación
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
@@ -66,3 +69,4 @@ export default function App() {
     </div>
   );
 }
+
