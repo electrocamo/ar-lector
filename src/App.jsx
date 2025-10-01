@@ -7,35 +7,36 @@ export default function App() {
   const [started, setStarted] = useState(false);
 
   const handleStart = async () => {
-    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-      container: containerRef.current,
-      imageTargetSrc: `${import.meta.env.BASE_URL}target.mind`,
+    if (!navigator.xr) {
+      alert("Tu navegador no soporta WebXR");
+      return;
+    }
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.xr.enabled = true;
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    containerRef.current.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera();
+
+    // ✅ Luces
+    const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+    scene.add(light);
+
+    // ✅ Modelo
+    const model = await loadGLTF(`${import.meta.env.BASE_URL}pieza.gltf`);
+    model.scene.scale.set(0.2, 0.2, 0.2);
+    model.scene.position.set(0, 0, -0.5); // medio metro al frente de la cámara
+    scene.add(model.scene);
+
+    // ✅ Sesión de AR
+    const session = await navigator.xr.requestSession("immersive-ar", {
+      requiredFeatures: ["hit-test", "local-floor"],
     });
 
-    const { renderer, scene, camera } = mindarThree;
-    const anchor = mindarThree.addAnchor(0);
+    renderer.xr.setSession(session);
 
-    // ✅ Añadir luces aquí
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(1, 1, 1);
-    scene.add(directionalLight);
-
-    // ✅ Saber cuándo se reconoce el target
-    anchor.onTargetFound = () => {
-      console.log("🎯 Target reconocido");
-    };
-
-    // ✅ Cargar modelo
-    const model = await loadGLTF(`${import.meta.env.BASE_URL}bandeja_paisa.glb`);
-    model.scene.scale.set(0.2, 0.2, 0.2);
-    model.scene.position.set(0, 0, 0);
-    model.scene.rotation.set(0, -Math.PI / 2, 0); // ejemplo: rotar 90° en X
-    anchor.group.add(model.scene);
-
-    await mindarThree.start();
     renderer.setAnimationLoop(() => {
       renderer.render(scene, camera);
     });
@@ -58,7 +59,7 @@ export default function App() {
             zIndex: 10,
           }}
         >
-          Iniciar experiencia RA
+          Iniciar AR sin marcador
         </button>
       )}
       <div ref={containerRef} style={{ width: "100vw", height: "100vh" }} />
